@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <defs>
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0f172a" />
+      <stop offset="100%" stop-color="#1e293b" />
+    </linearGradient>
+    <linearGradient id="boltGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#fbbf24" />
+      <stop offset="100%" stop-color="#f59e0b" />
+    </linearGradient>
+    <linearGradient id="pulseGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#10b981" />
+      <stop offset="100%" stop-color="#059669" />
+    </linearGradient>
+  </defs>
+  <!-- Base Background -->
+  <rect width="512" height="512" rx="112" fill="url(#bgGrad)" />
+  <!-- Inner Ring -->
+  <circle cx="256" cy="256" r="180" fill="none" stroke="#334155" stroke-width="8" stroke-dasharray="16 12" />
+  <circle cx="256" cy="256" r="140" fill="#090d16" stroke="#475569" stroke-width="4" />
+  <!-- Lightning Bolt (Sovereign Core Zap) -->
+  <path d="M280 120 L180 264 L244 264 L220 392 L332 236 L268 236 Z" fill="url(#boltGrad)" stroke="#d97706" stroke-width="4" stroke-linejoin="round" />
+  <!-- Live Signal Beacon -->
+  <circle cx="360" cy="152" r="22" fill="url(#pulseGrad)" />
+  <circle cx="360" cy="152" r="32" fill="none" stroke="#34d399" stroke-width="4" opacity="0.6" />
+</svg>

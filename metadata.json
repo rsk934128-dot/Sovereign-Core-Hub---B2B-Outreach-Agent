@@ -1,0 +1,6 @@
+{
+  "name": "Sovereign Core Hub - B2B Outreach Agent",
+  "description": "Autonomous 24/7 B2B lead intelligence, web scraping radar, multi-channel outreach dispatcher, AI voice SDR, and mobile background persistence with real-time push notifications.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

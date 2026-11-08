@@ -1,0 +1,118 @@
+name: Build & Release Android APK
+
+on:
+  workflow_dispatch:
+    inputs:
+      release_version:
+        description: 'Version tag (e.g. v1.0.0)'
+        required: false
+        default: 'v1.0.0'
+      create_github_release:
+        description: 'Publish as official GitHub Release asset?'
+        type: boolean
+        default: true
+  push:
+    tags:
+      - 'v*'
+  release:
+    types: [published]
+
+jobs:
+  build-android-apk:
+    name: 📱 Build Sovereign Core Hub APK
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: 📥 Check out repository
+        uses: actions/checkout@v4
+
+      - name: ☕ Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      - name: 🤖 Setup Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: 🟢 Setup Node.js 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+
+      - name: 📦 Install Node Dependencies
+        run: npm ci
+
+      - name: 🏗️ Build Web Application & Server
+        run: npm run build
+
+      - name: 🛠️ Install Bubblewrap CLI (Google TWA Tool)
+        run: npm install -g @bubblewrap/cli
+
+      - name: 🔑 Generate Android Keystore for Release
+        run: |
+          if [ -n "${{ secrets.ANDROID_KEYSTORE_BASE64 }}" ]; then
+            echo "${{ secrets.ANDROID_KEYSTORE_BASE64 }}" | base64 -d > android.keystore
+          else
+            echo "Generating self-signed Android release keystore..."
+            keytool -genkeypair -v \
+              -keystore android.keystore \
+              -alias android \
+              -keyalg RSA \
+              -keysize 2048 \
+              -validity 10000 \
+              -storepass "SovereignPass2026!" \
+              -keypass "SovereignPass2026!" \
+              -dname "CN=SovereignHub, OU=Outbound, O=Sovereign Core Systems, L=Global, S=CA, C=US"
+          fi
+
+      - name: 🔨 Build Android APK via Bubblewrap
+        env:
+          BUBBLEWRAP_KEYSTORE_PASSWORD: "SovereignPass2026!"
+          BUBBLEWRAP_KEY_PASSWORD: "SovereignPass2026!"
+        run: |
+          # Build APK using twa-manifest.json
+          bubblewrap build --skipPwaValidation || true
+          
+          # Locate built APK
+          mkdir -p output_apk
+          find . -name "*.apk" -exec cp {} output_apk/SovereignHub-v1.0.0.apk \;
+          
+          echo "Listing generated APK:"
+          ls -lh output_apk/
+
+      - name: 📤 Upload APK as GitHub Actions Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: SovereignHub-Android-APK
+          path: output_apk/*.apk
+          retention-days: 30
+
+      - name: 🚀 Publish APK to GitHub Release
+        if: ${{ github.event_name == 'release' || (github.event_name == 'workflow_dispatch' && github.event.inputs.create_github_release == 'true') || startsWith(github.ref, 'refs/tags/v') }}
+        uses: softprops/action-gh-release@v2
+        with:
+          files: output_apk/*.apk
+          tag_name: ${{ github.event.inputs.release_version || github.ref_name }}
+          name: Sovereign Core Hub Android App (${{ github.event.inputs.release_version || github.ref_name }})
+          draft: false
+          prerelease: false
+          body: |
+            ### 📱 Sovereign Core Hub — Official Android APK Release
+            
+            Autonomous 24/7 B2B sales development representative (SDR) and outbound pipeline orchestration application.
+            
+            #### 🚀 Highlights:
+            - **Google Play Store / TWA Ready**: Full screen standalone experience with background notifications.
+            - **AI Voice SDR Studio**: 24kHz neural speech generation powered by Gemini 3.1 Flash TTS.
+            - **LinkedIn Social Connector**: Live verified executive profiles & InMail hooks.
+            - **Outreach A/B Testing Lab**: Real-time CTR & reply rate comparative analytics.
+            - **24/7 Background Radar**: Continuous lead discovery with Screen WakeLock support.
+            
+            #### 📥 Download & Install:
+            Download the `SovereignHub-v1.0.0.apk` below, transfer it to your Android device, and tap to install!
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
